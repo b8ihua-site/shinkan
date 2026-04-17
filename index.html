@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新歓とばく2026 - Premium Edition</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --rarity-n: #95a5a6;
@@ -72,7 +71,7 @@
             font-weight: bold;
         }
 
-        /* ===== カード本体デザイン ===== */
+        /* ===== カードデザイン本体 ===== */
         .card {
             width: 300px;
             height: 420px;
@@ -165,6 +164,7 @@
             justify-content: center;
             font-size: 5rem;
             border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
         }
         .card.P .card-image-area { background: #333; }
 
@@ -209,8 +209,8 @@
             border: 2px solid #eee;
             font-size: 1rem;
             margin-bottom: 15px;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
             appearance: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
         }
 
         .main-btn {
@@ -225,30 +225,57 @@
             cursor: pointer;
             transition: 0.3s;
             box-shadow: 0 4px 0 #000;
-            margin-bottom: 10px;
         }
         .main-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
 
         .share-btn {
-            background: #00b894;
+            background: #4C00C6;
             color: #fff;
             border: none;
-            padding: 12px;
+            padding: 15px;
             width: 100%;
-            border-radius: 12px;
-            font-size: 0.9rem;
+            border-radius: 16px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s;
-            display: none; /* 初期は非表示 */
+            margin-top: 10px;
+            box-shadow: 0 4px 0 #310080;
+            display: none;
         }
-        .share-btn:hover { background: #55efc4; }
+        .share-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #008a6f; }
 
         .sub-btn {
             background: none; border: none; color: #aaa; margin-top: 15px; 
             font-size: 0.75rem; cursor: pointer; text-decoration: underline;
         }
 
+        /* --- 共有用モーダル --- */
+        #share-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #share-content { transform: scale(1.1); }
+        .share-close {
+            margin-top: 40px;
+            background: #fff;
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* --- インベントリ --- */
         .inventory-section { margin-top: 30px; text-align: left; }
         .player-card {
             background: #fff;
@@ -257,6 +284,7 @@
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
+        .player-card h3 { margin: 0 0 10px; font-size: 0.95rem; display: flex; justify-content: space-between; }
         .card-mini {
             display: flex;
             align-items: center;
@@ -273,12 +301,25 @@
             margin-right: 8px;
             text-align: center;
         }
-        .use-btn {
+        .btn-group-mini {
             margin-left: auto;
-            background: #ff4757;
+            display: flex;
+            gap: 4px;
+        }
+        .use-btn {
+            background: #4C00C6;
             color: #fff;
             border: none;
-            padding: 4px 10px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .move-btn {
+            border: 1px solid #4C00C6;
+            color: #4C00C6;
+            background:white;
+            padding: 4px 8px;
             border-radius: 6px;
             font-size: 0.7rem;
             cursor: pointer;
@@ -292,10 +333,8 @@
     
     <div class="stats">STOCK: <span id="count">0</span> / 61</div>
 
-    <div id="card-display-wrapper">
-        <div id="card-display">
-            <div class="card-placeholder">READY TO DRAW</div>
-        </div>
+    <div id="card-display">
+        <div class="card-placeholder">READY TO DRAW</div>
     </div>
 
     <div class="controls">
@@ -308,18 +347,23 @@
             <option value="田辺">田辺</option>
         </select>
         <button id="draw-btn" class="main-btn">スキルカードを引く</button>
-        <button id="share-btn" class="share-btn">結果を共有（画像保存）</button>
+        <button id="share-btn" class="share-btn">結果を共有する</button>
         <button id="reset-btn" class="sub-btn">システムリセット</button>
     </div>
 
     <div class="inventory-section" id="inventory-display"></div>
 </div>
 
+<div id="share-overlay">
+    <div id="share-content"></div>
+    <button class="share-close" onclick="closeShare()">戻る</button>
+</div>
+
 <script>
 const ICON_MAP = {
-    "Copy Cat": "🐱", "Reload": "🔄", "Happy Set": "🍔", "Risk Hedge": "🛡️",
-    "Hold": "⛓️", "Second Chance": "✨", "Amber Jack": "🐟", "Gacha Jack": "🎰",
-    "Destiny Lock": "🔒", "Time Machine": "⌛", "Time Furoshiki": "🎁",
+    "Copy Cat": "🐱", "Reload": "🔄", "Happy Set": "🎁", "Risk Hedge": "⚖️",
+    "Hold": "⛓️", "Second Chance": "✨", "Amber Jack": "🎣", "Gacha Jack": "🎰",
+    "Destiny Lock": "🔒", "Time Machine": "🕰️", "Time Furoshiki": "⏳",
     "Shield": "🛡️", "Shield (Fake)": "🚫", "Trace": "🕵️", "Trace (Fake)": "👺",
     "Skill Open": "👁️"
 };
@@ -330,28 +374,28 @@ const MASTER_DATA = [
     { name: "コピーキャット", en: "Copy Cat", rarity: "R", count: 1, target: "ランダムな人のランダムな1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
     { name: "リロード", en: "Reload", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "不要なカードを引いた際、ペナルティなしで引き直せる。" },
     { name: "ハッピーセット", en: "Happy Set", rarity: "SR", count: 2, target: "自分", duration: "-", limit: "結果確定時", desc: "他人がピタリ賞の際、その半分の恩恵を受ける。" },
-    { name: "リスクヘッジ", en: "Risk Hedge", rarity: "SR", count: 3, target: "自分の1項目", duration: "-", limit: "結果確定時", desc: "誤差4以上を「2」に固定する。" },
+    { name: "リスクヘッジ", en: "Risk Hedge", rarity: "SR", count: 3, target: "自分の1項目", duration: "-", limit: "結果確定時", desc: "特定の1項目に4以上の誤差が生じた場合、誤差を2に変えられる。" },
     { name: "ホールド", en: "Hold", rarity: "UR", count: 2, target: "特定の誰か", duration: "1週間", limit: "制限なし", desc: "対象の全てのスキルを無効化する。" },
     { name: "ホールド", en: "Hold", rarity: "SR", count: 2, target: "全員", duration: "1日", limit: "制限なし", desc: "全プレイヤーのスキルを封印する。" },
-    { name: "ホールド", en: "Hold", rarity: "R", count: 2, target: "特定の誰か", duration: "1日", limit: "制限なし", desc: "対象の全スキルを封印する。" },
-    { name: "セカンドチャンス", en: "Second Chance", rarity: "SR", count: 3, target: "自分の1項目", duration: "即時", limit: "制限なし", desc: "ペナルティなしで数値を±2変更できる。" },
+    { name: "ホールド", en: "Hold", rarity: "R", count: 2, target: "特定の誰か", duration: "1日", limit: "制限なし", desc: "対象の全てのスキルを封印する。" },
+    { name: "セカンドチャンス", en: "Second Chance", rarity: "SR", count: 3, target: "自分の1項目", duration: "即時", limit: "制限なし", desc: "ペナルティを払わずに特定の1項目を±2の範囲で変更できる" },
     { name: "アンバージャック", en: "Amber Jack", rarity: "SR", count: 3, target: "自分または相手", duration: "1ターム", limit: "制限なし", desc: "予想変更の際、±3以上の変動が必須となる。" },
-    { name: "ガチャジャック", en: "Gacha Jack", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "引いたカードを次走者に押し付け、そのカードを奪う。" },
-    { name: "デスティニーロック", en: "Destiny Lock", rarity: "UR", count: 2, target: "特定の1項目", duration: "完結まで", limit: "制限なし", desc: "対象の予想変更を永続的に禁止する。" },
-    { name: "デスティニーロック", en: "Destiny Lock", rarity: "SR", count: 2, target: "ランダムな1項目", duration: "完結まで", limit: "制限なし", desc: "対象の予想変更を永続的に禁止する。" },
-    { name: "デスティニーロック", en: "R", count: 2, target: "特定の1項目", duration: "そのターム", limit: "制限なし", desc: "このタームのみ予想変更を禁止する。" },
-    { name: "タイムマシン", en: "Time Machine", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "全体の盤面を1手前の状態に戻す。" },
+    { name: "ガチャジャック", en: "Gacha Jack", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "自分のいらないカードを次にガチャを引く人に押し付け、その人がガチャで引いたカードを自分が横取りできる。" },
+    { name: "デスティニーロック", en: "Destiny Lock", rarity: "UR", count: 2, target: "特定の1項目", duration: "完結まで", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
+    { name: "デスティニーロック", en: "Destiny Lock", rarity: "SR", count: 2, target: "ランダムな1項目", duration: "完結まで", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
+    { name: "デスティニーロック", en: "Destiny Lock", rarity: "R", count: 2, target: "特定の1項目", duration: "そのターム", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
+    { name: "タイムマシン", en: "Time Machine", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "全体を1手前の状態に戻す。" },
     { name: "タイムふろしき", en: "Time Furoshiki", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "1つの部活のみ1手前の予想に戻す。" },
     { name: "シールド", en: "Shield", rarity: "UR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "UR以下の攻撃を1回無効化する。" },
     { name: "シールド", en: "Shield", rarity: "SR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "SR以下の攻撃を1回無効化する。" },
     { name: "シールド", en: "Shield", rarity: "R", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "R以下の攻撃を1回無効化する。" },
     { name: "トレース", en: "Trace", rarity: "SR", count: 3, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "相手の手札をランダムで1枚奪う。" },
-    { name: "トレース", en: "Trace (Fake)", rarity: "P", count: 2, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "奪ったフリをする。奪ったカードは効果なし。" },
+    { name: "トレース", en: "Trace", rarity: "P", count: 2, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "相手の手札をランダムで1枚奪う。" },
     { name: "スキルオープン", en: "Skill Open", rarity: "N", count: 1, target: "ランダムな1枚", duration: "即時", limit: "制限なし", desc: "相手の手札を1枚覗き見る。" },
     { name: "スキルオープン", en: "Skill Open", rarity: "R", count: 1, target: "ランダムな全員", duration: "即時", limit: "制限なし", desc: "相手の全手札を覗き見る。" },
     { name: "スキルオープン", en: "Skill Open", rarity: "SR", count: 1, target: "特定の1枚", duration: "即時", limit: "制限なし", desc: "指定した相手の手札を1枚見る。" },
     { name: "スキルオープン", en: "Skill Open", rarity: "UR", count: 1, target: "特定の全手札", duration: "即時", limit: "制限なし", desc: "指定した相手の全手札を見る。" },
-    { name: "シールド", en: "Shield (Fake)", rarity: "P", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "効果がない偽の盾。壊れるまで判別不可。" }
+    { name: "シールド", en: "Shield", rarity: "P", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "SR以下の攻撃を1回無効化する。" },
 ];
 
 const PLAYERS = ["宇賀", "三井", "清岡", "高場", "木村", "田辺"];
@@ -380,6 +424,8 @@ function resetSystem() {
     });
     deck.sort(() => Math.random() - 0.5);
     PLAYERS.forEach(p => inventories[p] = []);
+    lastDrawnCard = null;
+    document.getElementById('share-btn').style.display = 'none';
     save();
 }
 
@@ -400,7 +446,10 @@ function updateUI() {
             <div class="card-mini">
                 <span class="badge-mini" style="color:${getRarityColor(card.rarity)}">${card.rarity}</span>
                 <span>${card.name}</span>
-                <button class="use-btn" onclick="useCard('${player}', ${idx})">使用</button>
+                <div class="btn-group-mini">
+                    <button class="move-btn" onclick="moveCard('${player}', ${idx})">移動</button>
+                    <button class="use-btn" onclick="useCard('${player}', ${idx})">使用</button>
+                </div>
             </div>
         `).join('');
         box.innerHTML = `<h3><span>${player}</span> <small style="color:#999">${inventories[player].length} 枚</small></h3>${cardListHTML || '<div style="color:#ccc; font-size:0.75rem; padding:10px;">手札なし</div>'}`;
@@ -418,23 +467,16 @@ document.getElementById('draw-btn').addEventListener('click', () => {
 
     const player = document.getElementById('current-player').value;
     const card = deck.pop();
-    lastDrawnCard = card;
     inventories[player].push(card);
+    lastDrawnCard = card;
 
-    renderCard(card);
-    document.getElementById('share-btn').style.display = 'block';
-
-    save();
-    updateUI();
-});
-
-function renderCard(card) {
     const display = document.getElementById('card-display');
     const icon = ICON_MAP[card.en] || "🃏";
+    
     display.innerHTML = '';
     setTimeout(() => {
         display.innerHTML = `
-            <div class="card ${card.rarity}" id="target-card">
+            <div class="card ${card.rarity}">
                 <div class="rarity-label">${card.rarity}</div>
                 <div class="card-header">
                     <span class="card-en">${card.en}</span>
@@ -445,49 +487,79 @@ function renderCard(card) {
                     <span class="tag">🎯 ${card.target}</span>
                     <span class="tag">⌛ ${card.duration}</span>
                 </div>
-                <div class="card-desc-box">${card.desc}</div>
+                <div class="card-desc-box">
+                    ${card.desc}
+                </div>
             </div>
         `;
+        document.getElementById('share-btn').style.display = 'block';
     }, 10);
-}
 
-// 共有用ボタンの処理
-document.getElementById('share-btn').addEventListener('click', async () => {
-    const cardEl = document.getElementById('target-card');
-    if (!cardEl) return;
-
-    // Pレアの場合、一時的にSRに書き換える
-    const isP = cardEl.classList.contains('P');
-    const originalHTML = cardEl.innerHTML;
-    const originalClass = cardEl.className;
-
-    if (isP) {
-        cardEl.classList.remove('P');
-        cardEl.classList.add('SR');
-        cardEl.querySelector('.rarity-label').innerText = 'SR';
-    }
-
-    // 画像化の実行
-    try {
-        const canvas = await html2canvas(cardEl, {
-            backgroundColor: null,
-            scale: 2 // 高画質化
-        });
-        
-        const link = document.createElement('a');
-        link.download = `card_result_${new Date().getTime()}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    } catch (e) {
-        alert("画像の保存に失敗しました。スクリーンショットを撮ってください。");
-    } finally {
-        // 元の状態（GM用表示）に戻す
-        if (isP) {
-            cardEl.className = originalClass;
-            cardEl.innerHTML = originalHTML;
-        }
-    }
+    save();
+    updateUI();
 });
+
+// カード移動ロジック
+window.moveCard = function(fromPlayer, index) {
+    const card = inventories[fromPlayer][index];
+    const otherPlayers = PLAYERS.filter(p => p !== fromPlayer);
+    
+    // 移動先選択
+    const toPlayer = prompt(`「${card.name}」を誰に送りますか？\n(${otherPlayers.join(', ')})`);
+    
+    if (toPlayer && PLAYERS.includes(toPlayer)) {
+        if (toPlayer === fromPlayer) return alert("自分自身には移動できません。");
+        
+        inventories[fromPlayer].splice(index, 1);
+        inventories[toPlayer].push(card);
+        alert(`${fromPlayer} から ${toPlayer} へカードを移動しました。`);
+        save();
+        updateUI();
+    } else if (toPlayer !== null) {
+        alert("正しいプレイヤー名を入力してください。");
+    }
+};
+
+document.getElementById('share-btn').addEventListener('click', () => {
+    if (!lastDrawnCard) return;
+
+    const overlay = document.getElementById('share-overlay');
+    const content = document.getElementById('share-content');
+    
+    let displayRarity = lastDrawnCard.rarity;
+    let displayClass = lastDrawnCard.rarity;
+    
+    if (lastDrawnCard.rarity === 'P') {
+        displayRarity = 'SR'; 
+        displayClass = 'SR';
+    }
+
+    const icon = ICON_MAP[lastDrawnCard.en] || "🃏";
+    
+    content.innerHTML = `
+        <div class="card ${displayClass}">
+            <div class="rarity-label">${displayRarity}</div>
+            <div class="card-header">
+                <span class="card-en">${lastDrawnCard.en}</span>
+                <span class="card-name">${lastDrawnCard.name}</span>
+            </div>
+            <div class="card-image-area">${icon}</div>
+            <div class="card-tags">
+                <span class="tag">🎯 ${lastDrawnCard.target}</span>
+                <span class="tag">⌛ ${lastDrawnCard.duration}</span>
+            </div>
+            <div class="card-desc-box">
+                ${lastDrawnCard.desc}
+            </div>
+        </div>
+    `;
+    
+    overlay.style.display = 'flex';
+});
+
+function closeShare() {
+    document.getElementById('share-overlay').style.display = 'none';
+}
 
 window.useCard = function(playerName, index) {
     if (confirm(`このカードを使用しますか？`)) {
@@ -501,7 +573,6 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     if (confirm("全データを消去し、山札を再構築します。")) {
         resetSystem();
         document.getElementById('card-display').innerHTML = '<div class="card-placeholder">READY</div>';
-        document.getElementById('share-btn').style.display = 'none';
         updateUI();
     }
 });
