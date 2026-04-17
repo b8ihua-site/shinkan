@@ -3,310 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Card Gacha System</title>
+    <title>新歓とばく2026 - Premium Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* --- CSS スタイル --- */
+        :root {
+            --rarity-n: #95a5a6;
+            --rarity-r: #d89c5b;
+            --rarity-sr: #f1c40f;
+            --rarity-ur: #a29bfe;
+            --rarity-p: #ff4757;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+        }
+
         body {
-    background-color: #fff;
-    color: #222;
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    margin: 0;
-}
+            background-color: #f0f2f5;
+            color: var(--text-main);
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
 
-.container {
-    text-align: center;
-    width: 100%;
-    max-width: 500px;
-}
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 480px;
+        }
 
-h1 { font-size: 1.5rem; margin-bottom: 20px; color: #222; }
-h2 { font-size: 1.2rem; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .logo {
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
 
-.player-select {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-}
+        .stats {
+            margin-bottom: 15px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            color: #777;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.05);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
 
-select {
-    padding: 8px 15px;
-    font-size: 1rem;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-}
+        /* --- カード表示エリア --- */
+        #card-display {
+            perspective: 1000px;
+            height: 440px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-.stats {
-    margin: 15px 0;
-    font-weight: bold;
-    color: #222;
-}
+        .card-placeholder {
+            width: 300px;
+            height: 420px;
+            border: 3px dashed #ccc;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #bbb;
+            background: #fff;
+            font-weight: bold;
+        }
 
-/* カード表示エリア */
-#card-display {
-    perspective: 1000px;
-    min-height: 420px;
-}
+        /* ===== カード本体デザイン ===== */
+        .card {
+            width: 300px;
+            height: 420px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 8px solid #333;
+            transform-style: preserve-3d;
+            animation: cardFlip 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            user-select: none;
+        }
 
-.card-placeholder {
-    height: 400px;
-    line-height: 400px;
-    border: 1px dashed #ccc;
-    border-radius: 15px;
-    color: #ccc;
-    margin-bottom: 20px;
-}
+        @keyframes cardFlip {
+            0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+        }
 
-/* ===== カード共通 ===== */
-.card {
-    width: 300px;
-    height: 420px;
-    background: #fff;
-    color: #333;
-    border-radius: 0px;
-    margin: 0 auto 20px;
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-    border: 3px solid transparent;
-    position: relative;
-    overflow: hidden;
-    animation: cardAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(125deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 100%);
+            z-index: 5;
+            pointer-events: none;
+        }
 
-/* 光沢 */
-.card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, rgba(255,255,255,0.5), rgba(255,255,255,0) 40%);
-    pointer-events: none;
-}
+        .card.N  { border-color: #bdc3c7; }
+        .card.R  { border-color: #d89c5b; background: linear-gradient(135deg, #fff, #fdf2e9); }
+        .card.SR { border-color: #f1c40f; background: linear-gradient(135deg, #fff, #fffde7); }
+        .card.UR { 
+            border-color: #6c5ce7; 
+            background: linear-gradient(135deg, #f7faff, #ffffff);
+            animation: urGlow 3s infinite alternate;
+        }
+        .card.P { border-color: #2d3436; background: #1a1a1a; color: #fff; }
 
-@keyframes cardAppear {
-    from { transform: scale(0.8) translateY(30px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
-}
+        @keyframes urGlow {
+            0% { box-shadow: 0 0 10px rgba(108, 92, 231, 0.4); }
+            100% { box-shadow: 0 0 30px rgba(108, 92, 231, 0.8); }
+        }
 
-/* ===== N：銀 ===== */
-.card.N {
-    border-image: linear-gradient(135deg, #bdc3c7, #ecf0f1, #95a5a6) 1;
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-}
-.card.N .rarity-badge {
-    background: linear-gradient(135deg, #bdc3c7, #95a5a6);
-    color: #fff;
-}
+        .card.SR::before, .card.UR::before {
+            content: "";
+            position: absolute;
+            inset: -50%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            z-index: 4;
+            transform: rotate(25deg);
+            animation: shine 4s infinite;
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
 
-/* ===== R：銅 ===== */
-.card.R {
-    border-image: linear-gradient(135deg, #b87333, #d89c5b, #8c4a1f) 1;
-    background: linear-gradient(135deg, #fdf2e9, #ffffff);
-}
-.card.R .rarity-badge {
-    background: linear-gradient(135deg, #b87333, #8c4a1f);
-    color: #fff;
-}
+        .rarity-label {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-style: italic;
+            opacity: 0.8;
+            z-index: 10;
+        }
 
-/* ===== SR：金 ===== */
-.card.SR {
-    border-image: linear-gradient(135deg, #ffd700, #fff4b0, #c9a200) 1;
-    background: linear-gradient(135deg, #fffbea, #ffffff);
-}
-.card.SR .rarity-badge {
-    background: linear-gradient(135deg, #ffd700, #c9a200);
-    color: #000;
-}
+        .card-header {
+            text-align: left;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 4px;
+        }
+        .card-name { font-size: 1.4rem; font-weight: 900; display: block; letter-spacing: -0.5px; }
+        .card-en { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #888; letter-spacing: 1px; }
 
-/* ===== UR：虹ホロ ===== */
-.card.UR {
-    border-image: linear-gradient(
-        135deg,
-        #d46a6a,  /* くすみ赤 */
-#d4a373,  /* くすみオレンジ */
-#d4c27a,  /* くすみ黄 */
-#7fbf7f,  /* くすみ緑 */
-#7fbfcf,  /* くすみシアン */
-#7f8fd4,  /* くすみ青 */
-#b48fd4   /* くすみ紫 */
-    ) 1;
-    background: linear-gradient(135deg, #f7faff, #ffffff);
-}
+        .card-image-area {
+            height: 140px;
+            background: #eee;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .card.P .card-image-area { background: #333; }
 
-/* ホログラム */
-.card.UR::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        120deg,
-        rgba(255,0,0,0.2),
-        rgba(255,255,0,0.2),
-        rgba(0,255,255,0.2),
-        rgba(0,0,255,0.2),
-        rgba(255,0,255,0.2)
-    );
-    mix-blend-mode: overlay;
-    opacity: 0.6;
-    pointer-events: none;
-    animation: holo 3s linear infinite;
-}
+        .card-tags {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            background: #eee;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .card.P .tag { background: #444; color: #ccc; }
 
-.card.UR .rarity-badge {
-    background: linear-gradient(
-        135deg,
-        #0000ff,
-        #800080
-    );
-    color: #fff;
-}
+        .card-desc-box {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .card.P .card-desc-box { background: rgba(255,255,255,0.05); }
 
-@keyframes holo {
-    0% { opacity: 0.3; }
-    50% { opacity: 0.7; }
-    100% { opacity: 0.3; }
-}
+        /* --- 操作UI --- */
+        .controls {
+            background: #fff;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
 
-/* ===== テキスト ===== */
-.rarity-badge {
-    display: inline-block;
-    padding: 3px 12px;
-    border-radius: 6px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    align-self: flex-start;
-}
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #eee;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+            appearance: none;
+        }
 
-.card-owner {
-    font-size: 0.8rem;
-    color: #333;
-    margin-bottom: 5px;
-    text-align: left;
-}
+        .main-btn {
+            background: #2d3436;
+            color: #fff;
+            border: none;
+            padding: 18px;
+            width: 100%;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 0 #000;
+            margin-bottom: 10px;
+        }
+        .main-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
 
-.card-name {
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-bottom: 15px;
-    text-align: left;
-    border-bottom: 2px solid #eee;
-}
+        .share-btn {
+            background: #00b894;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: none; /* 初期は非表示 */
+        }
+        .share-btn:hover { background: #55efc4; }
 
-/* レアリティで下線も変える */
-.card.N .card-name { border-bottom-color: #bdc3c7; }
-.card.R .card-name { border-bottom-color: #b87333; }
-.card.SR .card-name { border-bottom-color: #ffd700; }
-.card.UR .card-name { border-bottom-color: #ff66cc; }
+        .sub-btn {
+            background: none; border: none; color: #aaa; margin-top: 15px; 
+            font-size: 0.75rem; cursor: pointer; text-decoration: underline;
+        }
 
-.card-info {
-    font-size: 0.8rem;
-    text-align: left;
-    background: rgba(0,0,0,0.03);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    line-height: 1.4;
-}
-
-.card-desc {
-    font-size: 0.9rem;
-    text-align: left;
-    line-height: 1.5;
-    color: #2c3e50;
-}
-
-/* ===== ボタン ===== */
-.controls { margin-top: 20px; }
-
-.main-btn {
-    background: #555;
-    color: white;
-    border: none;
-    padding: 15px 40px;
-    font-size: 1.2rem;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: transform 0.1s, box-shadow 0.1s;
-    width: 100%;
-}
-
-.main-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-}
-
-.sub-btn {
-    background: none;
-    border: 1px solid #aaa;
-    color: #666;
-    margin-top: 15px;
-    padding: 5px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-/* ===== 所持リスト ===== */
-#inventory-display { margin-top: 20px; }
-
-.player-box {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.player-box h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.1rem;
-    color: #333;
-    border-bottom: 1px solid #ddd;
-}
-
-.owned-card-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-    color: #333;
-    margin-bottom: 6px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-}
-
-.rarity-tag {
-    font-weight: bold;
-    width: 35px;
-    display: inline-block;
-}
-
-.use-btn {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.75rem;
-}
+        .inventory-section { margin-top: 30px; text-align: left; }
+        .player-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .card-mini {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+        .badge-mini {
+            width: 24px;
+            font-weight: 900;
+            font-size: 0.6rem;
+            margin-right: 8px;
+            text-align: center;
+        }
+        .use-btn {
+            margin-left: auto;
+            background: #ff4757;
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-<img src="https://b8ihua.com/shinkan/shinkan_logo.PNG" width="60%">
+    <img src="https://b8ihua.com/shinkan/無題1645_20260417130458.png" width="200" class="logo">
     
+    <div class="stats">STOCK: <span id="count">0</span> / 61</div>
 
-    <div class="player-select">
-        <label>対象：</label>
+    <div id="card-display-wrapper">
+        <div id="card-display">
+            <div class="card-placeholder">READY TO DRAW</div>
+        </div>
+    </div>
+
+    <div class="controls">
         <select id="current-player">
             <option value="宇賀">宇賀</option>
             <option value="三井">三井</option>
@@ -315,67 +307,61 @@ select {
             <option value="木村">木村</option>
             <option value="田辺">田辺</option>
         </select>
+        <button id="draw-btn" class="main-btn">スキルカードを引く</button>
+        <button id="share-btn" class="share-btn">結果を共有（画像保存）</button>
+        <button id="reset-btn" class="sub-btn">システムリセット</button>
     </div>
 
-    <div class="stats">残り山札: <span id="count">50</span> / 61</div>
-
-    <div id="card-display">
-        <div class="card-placeholder">対象を選んでカードを引く</div>
-    </div>
-
-    <div class="controls">
-        <button id="draw-btn" class="main-btn">ガチャを引く</button><br>
-        <button id="reset-btn" class="sub-btn">システム全リセット</button>
-    </div>
-
-    <h2>所持カード一覧 (使用で削除)</h2>
-    <div id="inventory-display"></div>
+    <div class="inventory-section" id="inventory-display"></div>
 </div>
 
 <script>
-// --- データ定義 ---
-const PLAYERS = ["宇賀", "三井", "清岡", "高場", "木村", "田辺"];
+const ICON_MAP = {
+    "Copy Cat": "🐱", "Reload": "🔄", "Happy Set": "🍔", "Risk Hedge": "🛡️",
+    "Hold": "⛓️", "Second Chance": "✨", "Amber Jack": "🐟", "Gacha Jack": "🎰",
+    "Destiny Lock": "🔒", "Time Machine": "⌛", "Time Furoshiki": "🎁",
+    "Shield": "🛡️", "Shield (Fake)": "🚫", "Trace": "🕵️", "Trace (Fake)": "👺",
+    "Skill Open": "👁️"
+};
 
 const MASTER_DATA = [
-    { name: "コピーキャット", rarity: "UR", count: 1, target: "特定の人の特定の1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
-    { name: "コピーキャット", rarity: "SR", count: 1, target: "ランダムな人の特定の1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
-    { name: "コピーキャット", rarity: "R", count: 1, target: "ランダムな人のランダムな1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
-    { name: "リロード", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "リロードを持っている際にいらないカードを引いた場合、そのカードとリロードを捨て、ペナルティを払わずに新たに引き直せる。" },
-    { name: "ハッピーセット", rarity: "SR", count: 2, target: "自分", duration: "-", limit: "結果確定時", desc: "自分以外の誰かがピタリになったときに、その半分の恩恵を受ける。" },
-    { name: "リスクヘッジ", rarity: "SR", count: 3, target: "自分の1項目", duration: "-", limit: "結果確定時", desc: "特定の1項目に4以上の誤差が生じた場合、誤差を2に変えられる。" },
-    { name: "ホールド", rarity: "UR", count: 2, target: "特定の誰かの全てのスキル", duration: "1週間", limit: "制限なし", desc: "スキルを無効化できる。" },
-    { name: "ホールド", rarity: "SR", count: 2, target: "全員の全てのスキル", duration: "1日", limit: "制限なし", desc: "スキルを無効化できる。" },
-    { name: "ホールド", rarity: "R", count: 2, target: "特定の誰かの全てのスキル", duration: "1日", limit: "制限なし", desc: "スキルを無効化できる。" },
-    { name: "セカンドチャンス", rarity: "SR", count: 3, target: "自分の1項目", duration: "即時", limit: "制限なし", desc: "ペナルティを払わずに特定の1項目を±2の範囲で変更できる" },
-    { name: "アンバージャック", rarity: "SR", count: 3, target: "自分または相手", duration: "1ターム", limit: "制限なし", desc: "これを使用されたタームは、予想を変更する時、±3以上でしか変更できない" },
-    { name: "ガチャジャック", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "自分のいらないカードを次にガチャを引く人に押し付け、その人がガチャで引いたカードを自分が横取りできる。" },
-    { name: "デスティニーロック", rarity: "UR", count: 2, target: "特定の相手の特定の1部活", duration: "最後まで", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
-    { name: "デスティニーロック", rarity: "SR", count: 2, target: "ランダムな相手のランダムな1部活", duration: "最後まで", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
-    { name: "デスティニーロック", rarity: "R", count: 2, target: "特定の相手の特定の1部活", duration: "そのターム", limit: "制限なし", desc: "予想変更を禁止する。但し、スキルによる予想変更は可能。" },
-    { name: "タイムマシン", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "全体を1個前の予想に戻せる" },
-    { name: "タイフロ", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "1部活を1個前の予想に戻せる" },
-    { name: "シールド", rarity: "UR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "受けたUR以下の攻撃を1回無効化できる。双方に通知が入る。" },
-    { name: "シールド", rarity: "SR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "受けたSR以下の攻撃を1回無効化できる。双方に通知が入る。" },
-    { name: "シールド", rarity: "R", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "受けたR以下の攻撃を1回無効化できる。双方に通知が入る。" },
-    { name: "トレース", rarity: "SR", count: 3, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "相手のカードをランダムで1枚奪える。" },
-    { name: "トレース", rarity: "P", count: 2, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "奪ったカードはなんの効果も持たない。" },
-    { name: "スキルオープン", rarity: "N", count: 1, target: "ランダムな相手のランダムなスキル", duration: "即時", limit: "制限なし", desc: "相手の手持ちスキルを覗き見できる。" },
-    { name: "スキルオープン", rarity: "R", count: 1, target: "ランダムな相手の全てのスキル", duration: "即時", limit: "制限なし", desc: "相手の手持ちスキルを覗き見できる。" },
-    { name: "スキルオープン", rarity: "SR", count: 1, target: "特定の相手のランダムなスキル", duration: "即時", limit: "制限なし", desc: "相手の手持ちスキルを覗き見できる。" },
-    { name: "スキルオープン", rarity: "UR", count: 1, target: "特定の相手の全てのスキル", duration: "即時", limit: "制限なし", desc: "相手の手持ちスキルを覗き見できる。" },
-    { name: "シールド", rarity: "P", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "実はなんの効果もない。攻撃を食らうまで気づかない。" }
+    { name: "コピーキャット", en: "Copy Cat", rarity: "UR", count: 1, target: "特定の人の特定の1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
+    { name: "コピーキャット", en: "Copy Cat", rarity: "SR", count: 1, target: "ランダムな人の特定の1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
+    { name: "コピーキャット", en: "Copy Cat", rarity: "R", count: 1, target: "ランダムな人のランダムな1部活", duration: "即時", limit: "制限なし", desc: "1部活の予想をそのままコピーできる" },
+    { name: "リロード", en: "Reload", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "不要なカードを引いた際、ペナルティなしで引き直せる。" },
+    { name: "ハッピーセット", en: "Happy Set", rarity: "SR", count: 2, target: "自分", duration: "-", limit: "結果確定時", desc: "他人がピタリ賞の際、その半分の恩恵を受ける。" },
+    { name: "リスクヘッジ", en: "Risk Hedge", rarity: "SR", count: 3, target: "自分の1項目", duration: "-", limit: "結果確定時", desc: "誤差4以上を「2」に固定する。" },
+    { name: "ホールド", en: "Hold", rarity: "UR", count: 2, target: "特定の誰か", duration: "1週間", limit: "制限なし", desc: "対象の全てのスキルを無効化する。" },
+    { name: "ホールド", en: "Hold", rarity: "SR", count: 2, target: "全員", duration: "1日", limit: "制限なし", desc: "全プレイヤーのスキルを封印する。" },
+    { name: "ホールド", en: "Hold", rarity: "R", count: 2, target: "特定の誰か", duration: "1日", limit: "制限なし", desc: "対象の全スキルを封印する。" },
+    { name: "セカンドチャンス", en: "Second Chance", rarity: "SR", count: 3, target: "自分の1項目", duration: "即時", limit: "制限なし", desc: "ペナルティなしで数値を±2変更できる。" },
+    { name: "アンバージャック", en: "Amber Jack", rarity: "SR", count: 3, target: "自分または相手", duration: "1ターム", limit: "制限なし", desc: "予想変更の際、±3以上の変動が必須となる。" },
+    { name: "ガチャジャック", en: "Gacha Jack", rarity: "SR", count: 5, target: "自分", duration: "即時", limit: "制限なし", desc: "引いたカードを次走者に押し付け、そのカードを奪う。" },
+    { name: "デスティニーロック", en: "Destiny Lock", rarity: "UR", count: 2, target: "特定の1項目", duration: "完結まで", limit: "制限なし", desc: "対象の予想変更を永続的に禁止する。" },
+    { name: "デスティニーロック", en: "Destiny Lock", rarity: "SR", count: 2, target: "ランダムな1項目", duration: "完結まで", limit: "制限なし", desc: "対象の予想変更を永続的に禁止する。" },
+    { name: "デスティニーロック", en: "R", count: 2, target: "特定の1項目", duration: "そのターム", limit: "制限なし", desc: "このタームのみ予想変更を禁止する。" },
+    { name: "タイムマシン", en: "Time Machine", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "全体の盤面を1手前の状態に戻す。" },
+    { name: "タイムふろしき", en: "Time Furoshiki", rarity: "SR", count: 2, target: "自分", duration: "即時", limit: "制限なし", desc: "1つの部活のみ1手前の予想に戻す。" },
+    { name: "シールド", en: "Shield", rarity: "UR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "UR以下の攻撃を1回無効化する。" },
+    { name: "シールド", en: "Shield", rarity: "SR", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "SR以下の攻撃を1回無効化する。" },
+    { name: "シールド", en: "Shield", rarity: "R", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "R以下の攻撃を1回無効化する。" },
+    { name: "トレース", en: "Trace", rarity: "SR", count: 3, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "相手の手札をランダムで1枚奪う。" },
+    { name: "トレース", en: "Trace (Fake)", rarity: "P", count: 2, target: "特定の相手", duration: "即時", limit: "制限なし", desc: "奪ったフリをする。奪ったカードは効果なし。" },
+    { name: "スキルオープン", en: "Skill Open", rarity: "N", count: 1, target: "ランダムな1枚", duration: "即時", limit: "制限なし", desc: "相手の手札を1枚覗き見る。" },
+    { name: "スキルオープン", en: "Skill Open", rarity: "R", count: 1, target: "ランダムな全員", duration: "即時", limit: "制限なし", desc: "相手の全手札を覗き見る。" },
+    { name: "スキルオープン", en: "Skill Open", rarity: "SR", count: 1, target: "特定の1枚", duration: "即時", limit: "制限なし", desc: "指定した相手の手札を1枚見る。" },
+    { name: "スキルオープン", en: "Skill Open", rarity: "UR", count: 1, target: "特定の全手札", duration: "即時", limit: "制限なし", desc: "指定した相手の全手札を見る。" },
+    { name: "シールド", en: "Shield (Fake)", rarity: "P", count: 3, target: "自分", duration: "1ターム", limit: "制限なし", desc: "効果がない偽の盾。壊れるまで判別不可。" }
 ];
 
-// --- 状態管理 ---
+const PLAYERS = ["宇賀", "三井", "清岡", "高場", "木村", "田辺"];
 let deck = [];
 let inventories = {};
-
-// --- ロジック ---
+let lastDrawnCard = null;
 
 function init() {
-    const savedDeck = localStorage.getItem('skill_gacha_deck');
-    const savedInv = localStorage.getItem('skill_gacha_inv');
-
+    const savedDeck = localStorage.getItem('shinkan_deck_2026');
+    const savedInv = localStorage.getItem('shinkan_inv_2026');
     if (savedDeck && savedInv) {
         deck = JSON.parse(savedDeck);
         inventories = JSON.parse(savedInv);
@@ -392,19 +378,14 @@ function resetSystem() {
             deck.push({...data, instanceId: Math.random().toString(36).substr(2, 9)});
         }
     });
-    // シャッフル
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-    // インベントリ初期化
+    deck.sort(() => Math.random() - 0.5);
     PLAYERS.forEach(p => inventories[p] = []);
     save();
 }
 
 function save() {
-    localStorage.setItem('skill_gacha_deck', JSON.stringify(deck));
-    localStorage.setItem('skill_gacha_inv', JSON.stringify(inventories));
+    localStorage.setItem('shinkan_deck_2026', JSON.stringify(deck));
+    localStorage.setItem('shinkan_inv_2026', JSON.stringify(inventories));
 }
 
 function updateUI() {
@@ -414,76 +395,117 @@ function updateUI() {
 
     PLAYERS.forEach(player => {
         const box = document.createElement('div');
-        box.className = 'player-box';
-        
+        box.className = 'player-card';
         const cardListHTML = inventories[player].map((card, idx) => `
-            <div class="owned-card-item">
-                <span><span class="rarity-tag" style="color:${getRarityColor(card.rarity)}">[${card.rarity}]</span> ${card.name}</span>
+            <div class="card-mini">
+                <span class="badge-mini" style="color:${getRarityColor(card.rarity)}">${card.rarity}</span>
+                <span>${card.name}</span>
                 <button class="use-btn" onclick="useCard('${player}', ${idx})">使用</button>
             </div>
         `).join('');
-
-        box.innerHTML = `<h3>${player} (${inventories[player].length})</h3>${cardListHTML || '<div style="color:#777; font-size:0.8rem;">なし</div>'}`;
+        box.innerHTML = `<h3><span>${player}</span> <small style="color:#999">${inventories[player].length} 枚</small></h3>${cardListHTML || '<div style="color:#ccc; font-size:0.75rem; padding:10px;">手札なし</div>'}`;
         invDisplay.appendChild(box);
     });
 }
 
 function getRarityColor(r) {
-    const colors = { "UR": "#f1c40f", "SR": "#9b59b6", "R": "#3498db", "P": "#e74c3c", "N": "#7f8c8d" };
+    const colors = { "UR": "#6c5ce7", "SR": "#f1c40f", "R": "#d89c5b", "P": "#ff4757", "N": "#95a5a6" };
     return colors[r] || "#333";
 }
 
-// ガチャを引くボタン
 document.getElementById('draw-btn').addEventListener('click', () => {
-    if (deck.length === 0) {
-        alert("山札が空です。リセットしてください。");
-        return;
-    }
+    if (deck.length === 0) return alert("デッキが空です");
 
     const player = document.getElementById('current-player').value;
     const card = deck.pop();
+    lastDrawnCard = card;
     inventories[player].push(card);
 
-    // 画面中央にカードを表示
-    const display = document.getElementById('card-display');
-    display.innerHTML = `
-        <div class="card ${card.rarity}">
-            
-            <div class="rarity-badge">${card.rarity}</div>
-            <div class="card-name">${card.name}</div>
-            <div class="card-info">
-                <b>対象:</b> ${card.target}<br>
-                <b>継続:</b> ${card.duration}<br>
-                <b>使用期限:</b> ${card.limit}
-            </div>
-            <div class="card-desc">${card.desc}</div>
-        </div>
-    `;
+    renderCard(card);
+    document.getElementById('share-btn').style.display = 'block';
 
     save();
     updateUI();
 });
 
-// 使用（削除）ボタン
+function renderCard(card) {
+    const display = document.getElementById('card-display');
+    const icon = ICON_MAP[card.en] || "🃏";
+    display.innerHTML = '';
+    setTimeout(() => {
+        display.innerHTML = `
+            <div class="card ${card.rarity}" id="target-card">
+                <div class="rarity-label">${card.rarity}</div>
+                <div class="card-header">
+                    <span class="card-en">${card.en}</span>
+                    <span class="card-name">${card.name}</span>
+                </div>
+                <div class="card-image-area">${icon}</div>
+                <div class="card-tags">
+                    <span class="tag">🎯 ${card.target}</span>
+                    <span class="tag">⌛ ${card.duration}</span>
+                </div>
+                <div class="card-desc-box">${card.desc}</div>
+            </div>
+        `;
+    }, 10);
+}
+
+// 共有用ボタンの処理
+document.getElementById('share-btn').addEventListener('click', async () => {
+    const cardEl = document.getElementById('target-card');
+    if (!cardEl) return;
+
+    // Pレアの場合、一時的にSRに書き換える
+    const isP = cardEl.classList.contains('P');
+    const originalHTML = cardEl.innerHTML;
+    const originalClass = cardEl.className;
+
+    if (isP) {
+        cardEl.classList.remove('P');
+        cardEl.classList.add('SR');
+        cardEl.querySelector('.rarity-label').innerText = 'SR';
+    }
+
+    // 画像化の実行
+    try {
+        const canvas = await html2canvas(cardEl, {
+            backgroundColor: null,
+            scale: 2 // 高画質化
+        });
+        
+        const link = document.createElement('a');
+        link.download = `card_result_${new Date().getTime()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    } catch (e) {
+        alert("画像の保存に失敗しました。スクリーンショットを撮ってください。");
+    } finally {
+        // 元の状態（GM用表示）に戻す
+        if (isP) {
+            cardEl.className = originalClass;
+            cardEl.innerHTML = originalHTML;
+        }
+    }
+});
+
 window.useCard = function(playerName, index) {
-    const cardName = inventories[playerName][index].name;
-    if (confirm(`${playerName}の「${cardName}」を使用しますか？(一覧から消去されます)`)) {
+    if (confirm(`このカードを使用しますか？`)) {
         inventories[playerName].splice(index, 1);
         save();
         updateUI();
     }
 };
 
-// 全リセットボタン
 document.getElementById('reset-btn').addEventListener('click', () => {
-    if (confirm("全てのデータを消去し、山札を元にリセットしますか？")) {
+    if (confirm("全データを消去し、山札を再構築します。")) {
         resetSystem();
-        document.getElementById('card-display').innerHTML = '<div class="card-placeholder">RESET DONE</div>';
+        document.getElementById('card-display').innerHTML = '<div class="card-placeholder">READY</div>';
+        document.getElementById('share-btn').style.display = 'none';
         updateUI();
     }
 });
 
-// 初期実行
 init();
 </script>
 
